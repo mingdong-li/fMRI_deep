@@ -14,13 +14,10 @@ import torchvision.utils
 import numpy as np
 import pandas as pd
 import random
-
-sys.path.append("./deep/base_siam")
-from config import Config
-# from utils.utils import imshow, show_plot
-from model import SiameseNetwork, ContrastiveLoss
-
 import nilearn as nil
+
+sys.path.append('./')
+import setting
 
 
 class CreateNiiDataset(Dataset):
@@ -220,7 +217,7 @@ class ValNiiDataset(Dataset):
 
 
 if __name__ == '__main__':
-    my_config = Config('reho')
+    my_config = setting.Config('bold')
 
     fmri_datasets = {}
     fmri_datasets['train'] = CreateNiiDataset(my_config.train_dir, my_config.train_pheno_dir, my_config.train_csv)
@@ -240,19 +237,17 @@ if __name__ == '__main__':
                         shuffle=False, num_workers=0)
     dataloaders = {'train': train_dataloader, 'val': val_dataloader}
     
-    # Net = SiameseNetwork().cuda()
     # visualization the Dataloader 
     for epoch in range(2):
         for i, batch_data in enumerate(dataloaders['val']):
-            print(epoch, i, "inputs", batch_data['input0']['values'].data.size(), "labels", batch_data['input0']['label'].data.size())
-            print(batch_data['contrast'].shape)
+            print(epoch, i, "inputs", batch_data['input0']['values'].data.size(), "labels", batch_data['input0']['labels'].data.size())
+            # BOLD data [10, 1, 49, 58, 47, 231];fMRI影像：[1, 49, 58, 47, 231]
+            print(batch_data['same'].shape)
             
             print(batch_data['input0']['name'])
             print(batch_data['input1']['name'])
-            print(batch_data['input0']['label'])
-            print(batch_data['input1']['label'])
+            print(batch_data['input0']['labels'])
+            print(batch_data['input1']['labels'])
             print(batch_data['contrast'])
 
-            # a,b = Net(batch_data['input0']['values'].cuda(),batch_data['input1']['values'].cuda())
-            # print(a.shape)
     print('ok')
