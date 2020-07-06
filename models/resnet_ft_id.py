@@ -5,8 +5,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import math
 from functools import partial
-
-sys.path.append('./deep/base_siam/models')
 from resnet_ft import ResNet
 
 # MedicalNet-Tencent 
@@ -247,7 +245,7 @@ def resnet18_id(pretrained=False,**kwargs):
     if pretrained == True:
         # MedicalNet的模型在多GPU训练，dict的key多了module
         model = nn.DataParallel(model)
-        pretrained_dict = torch.load('./deep/base_siam/weights/MedicalNet/pretrain/resnet_18.pth')['state_dict']
+        pretrained_dict = torch.load('./weight/MedicalNet/pretrain/resnet_18.pth')['state_dict']
         model_dict = model.state_dict()
         # 1. filter out unnecessary keys
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
@@ -263,7 +261,7 @@ def resnet50_id(pretrained=False,**kwargs):
     if pretrained == True:
         # MedicalNet的模型在多GPU训练，dict的key多了module
         model = nn.DataParallel(model)
-        pretrained_dict = torch.load('./deep/base_siam/weights/MedicalNet/pretrain/resnet_50.pth')['state_dict']
+        pretrained_dict = torch.load('./weight/MedicalNet/pretrain/resnet_50.pth')['state_dict']
         model_dict = model.state_dict()
         # 1. filter out unnecessary keys
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
@@ -273,23 +271,23 @@ def resnet50_id(pretrained=False,**kwargs):
     return model
 
 if __name__ == '__main__':
-    model = resnet50_id(sample_input_D=49,
-                    sample_input_H = 59,
-                    sample_input_W = 47,
-                    shortcut_type= 'B',
-                    no_cuda= False,
-                    num_seg_classes=2,  # 源代码default=2
-                    num_features=128,
-                    pretrained=True)
+    # model = resnet50_id(sample_input_D=49,
+    #                 sample_input_H = 59,
+    #                 sample_input_W = 47,
+    #                 shortcut_type= 'B',
+    #                 no_cuda= False,
+    #                 num_seg_classes=2,  # 源代码default=2
+    #                 num_features=128,
+    #                 pretrained=True)
 
-    # model = resnet18_id(sample_input_D=49,
-    #             sample_input_H = 59,
-    #             sample_input_W = 47,
-    #             shortcut_type= 'B',
-    #             no_cuda= False,
-    #             num_seg_classes=2,  # 源代码default=2
-    #             num_features=128,
-    #             pretrained=True)
+    model = resnet18_id(sample_input_D=49,
+                sample_input_H = 59,
+                sample_input_W = 47,
+                shortcut_type= 'B',
+                no_cuda= False,
+                num_seg_classes=2,  # 源代码default=2
+                num_features=128,
+                pretrained=True)
 
     inputs0 = torch.rand(8, 1, 49, 58, 47)
     inputs1 = torch.rand(8, 1, 49, 58, 47)
