@@ -3,6 +3,11 @@ from torch import nn
 from models import resnet, baseline, resnet_ft_id
 
 def generate_model(opt):
+    # 目前读入的数据是[1, 49, 58, 47, 231]
+    # 但现在模型是处理[1, 49, 58, 47]
+    # 方案一：加lstm层，建立时序网络
+    # 方案二：选择231中的某一时刻，或者平均值？
+
     assert opt.model in [
         'baseline',
         'baseline4D',
