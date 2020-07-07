@@ -217,9 +217,17 @@ class ValNiiDataset(Dataset):
 
 
 if __name__ == '__main__':
+    # opt = setting.parse_opts('bold')
+    # print(opt.epoch_num)
+
+
     my_config = setting.Config('bold')
 
     fmri_datasets = {}
+
+    # train_csv是针对几个机构的数据集生成的
+    # 目前的bold只有peking数据，建立Dataset有没有影响（目前代码是可以运行的）# 有bug!!!有些nii没有匹配到
+    # 重写fmri_datasets，按照文件夹具体有的数据进行开展，不使用csv对应
     fmri_datasets['train'] = CreateNiiDataset(my_config.train_dir, my_config.train_pheno_dir, my_config.train_csv)
     fmri_datasets['val'] =  ValNiiDataset(my_config.train_dir, my_config.train_pheno_dir,
                             my_config.val_dir, my_config.val_pheno_dir, my_config.val1_csv)
@@ -229,6 +237,8 @@ if __name__ == '__main__':
     #             shuffle=True) # more workers may work faster
     #             for x in ['train', 'val']}
 
+
+    
     train_dataloader = torch.utils.data.DataLoader(fmri_datasets['train'], 
                         batch_size = my_config.batch_size,
                         shuffle=True, num_workers=0)

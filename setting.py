@@ -22,7 +22,6 @@ class Config():
 
         self.train_csv = './datasets/siam/train.csv'
         self.val_csv = './datasets/siam/val.csv'
-        self.val1_csv = './datasets/siam/val_vs_train.csv'
 
         # train hyperparameters
         self.batch_size = 8
@@ -33,13 +32,8 @@ def parse_opts(env):
     assert env in ['falff', 'reho', 'bold']
     parser = argparse.ArgumentParser()
 
-
     # train hyperparameters
-    self.batch_size = 8
-    self.train_num_epochs = 20
-    self.lr = 0.001
-
-     parser.add_argument('--batch_size',
+    parser.add_argument('--batch_size',
         default=32,
         type=int,
         help='batch size')
@@ -54,6 +48,8 @@ def parse_opts(env):
         type=float,
         help='learning rate')
 
+
+    # data path
     parser.add_argument('--train_data_root',
         default='./datasets/siam/train_%s'%(env),
         type=str,
@@ -83,7 +79,7 @@ def parse_opts(env):
         default='./datasets/siam/val.csv',
         type=str,
         help='csv file of val_list')
-
+    args = parser.parse_args()
     return parser
 
     
