@@ -20,37 +20,42 @@ fig_format = {'train':'r.-', 'val': 'b.--',
             'val4':'b^--', 'val3':'mx--', 'val2':'co--', 'val1':'k.--',
             'avg_acc':'rD-'}
     
-def show_plot(counter, y, env):
+def show_plot(counter, y, env, factor):
     """plot loss curve
     
     Arguments:
         counter {list} -- [0,1,2,......]
         y {dict} -- {'train':list, 'val':list}
-        env {str} -- 'reho' or 'falff' and so on as heading
-    
+        env {str} -- 'reho' or 'falff' or 'bold'
+        factor {str} -- 'X_LOSS' or 'ACCURACY'
     """
     for key, v_list in y.items():
         if len(v_list) != 0:
             plt.plot(counter, v_list, fig_format[key], label = key) 
     plt.legend()
-    plt.savefig('./deep/base_siam/test_%s.jpg'%env)
+    plt.savefig('./result/%s_%s.jpg'%(env, factor))
     plt.show()
 
+def dict_save(dict,name):
+    """save dict
+
+    Args:
+        dict (dict): to be saved dict
+        name (str): name.txt
+    """
+    f = open("./result/%s.txt"%name,"w")
+    f.write( str(dict) )
+    f.close()
 
 if __name__ == '__main__':
+    
     x = [1,2,3,4,5]
     y = {'train':[2,4,3,1,3],'val':[4,2,1,5,3]}
+
+    dict_save(y, 'test')
 
     xx = [1,2,3,4,5]
     yy = {'train':[],'val4':[4,2,1,5,3],'val3':[1,2,5,1,3],'val2':[2,5,1,6,2], 'avg_acc':[1,2,3,2,1]}
 
     show_plot(x,y,'reho')
     show_plot(xx,yy,'reho')
-
-    # x = [1,2,3,4,5]
-    # y1 = [2,4,3,1,3]
-    # y2 = [4,2,1,5,3]
-    # plt.plot(x,y1,'r.-',label = 'train')
-    # plt.plot(x,y2,'b.--', label = 'val')
-    # plt.legend()
-    # plt.show()

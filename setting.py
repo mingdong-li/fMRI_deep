@@ -37,6 +37,11 @@ def parse_opts(env):
         type=str,
         help='backbone select')
 
+    parser.add_argument('--dimension',
+        default=3,
+        type=int,
+        help='data dimension')
+
     # train hyperparameters
     parser.add_argument("--batch_size",
         default=32,
@@ -53,6 +58,27 @@ def parse_opts(env):
         type=float,
         help='learning rate')
 
+    # img info
+    [D, H, W, time]
+    parser.add_argument('--input_D',
+        default=49,
+        type=int,
+        help='sample_input_D')
+
+    parser.add_argument('--input_H',
+        default=53,
+        type=int,
+        help='sample_input_H')
+
+    parser.add_argument('--input_W',
+        default=47,
+        type=int,
+        help='sample_input_W')
+
+    parser.add_argument('--input_time',
+        default=231,
+        type=int,
+        help='sample_input_time')
 
     # data path
     parser.add_argument('--train_data_root',

@@ -17,7 +17,7 @@ def generate_model(opt):
         'unet']
 
     if opt.model == 'baseline':
-        model, _ = baseline.initialize_model('baseline', 512)
+        model, _ = baseline.initialize_model('baseline', 128)
 
     if opt.model == 'resnet':
         # assert opt.model_depth in [10, 18, 34, 50, 101]
