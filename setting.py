@@ -20,8 +20,8 @@ class Config():
         self.train_pheno_dir ='./datasets/siam/adhd200_pheno.csv'
         self.val_pheno_dir ='./datasets/siam/adhd200_pheno.csv'
 
-        self.train_csv = './datasets/siam/train.csv'
-        self.val_csv = './datasets/siam/val.csv'
+        self.train_csv = './datasets/siam/train_bold.csv'
+        self.val_csv = './datasets/siam/val_bold.csv'
 
         # train hyperparameters
         self.batch_size = 8
@@ -32,8 +32,13 @@ def parse_opts(env):
     assert env in ['falff', 'reho', 'bold']
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--model",
+        default='baseline',
+        type=str,
+        help='backbone select')
+
     # train hyperparameters
-    parser.add_argument('--batch_size',
+    parser.add_argument("--batch_size",
         default=32,
         type=int,
         help='batch size')
@@ -80,7 +85,11 @@ def parse_opts(env):
         type=str,
         help='csv file of val_list')
     args = parser.parse_args()
-    return parser
+    return args
+
+if __name__ == '__main__':
+    opt = parse_opts('bold')
+    print('ok')
 
     
 

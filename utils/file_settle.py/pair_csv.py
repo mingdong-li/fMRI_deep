@@ -5,6 +5,7 @@ import random
 
 
 class pair_csv():
+    # 生成了全部的组合情况
     def __init__(self,file_dir,pheno_dir):
         self.files = os.listdir(file_dir)
         self.pheno = pd.read_csv(pheno_dir)
@@ -35,12 +36,12 @@ class pair_csv():
                     # print(img0_dir, 'vs', img1_dir)
         
         self.pair_df = pd.DataFrame(self.pair,columns=['img0','img1','same', 'img0_label', 'img1_label'])
-        self.pair_df.to_csv("./data/siam/%s.csv"%mode)
+        self.pair_df.to_csv("./data/siam/%s_bold.csv"%mode)
         print("ok")
 
 
 class val_pair_csv():
-    
+    # 每个文件生成support_num个同类对比和异类对比
     def __init__(self, train_dir,val_dir, train_pheno_dir, val_pheno_dir):
         """init and form a val csv to read nii
         
@@ -99,16 +100,16 @@ class val_pair_csv():
         
         self.pair_df = pd.DataFrame(self.pair,columns=['img0','img1','same', 
                                     'img0_label', 'img1_label'])
-        self.pair_df.to_csv("./data/siam/val_vs_train.csv")
+        self.pair_df.to_csv("./datasets/siam/val_bold.csv")
         print("ok")
 
 
 if __name__ == '__main__':
-    data = {'train':'./data/siam/train_bold', 'val':'./data/siam/val_bold'}
-    pheno = {'train':'./data/siam/adhd200_pheno.csv', 
-            'val':'./data/siam/adhd200_pheno.csv'}
+    data = {'train':'./datasets/siam/train_bold', 'val':'./datasets/siam/val_bold'}
+    pheno = {'train':'./datasets/siam/adhd200_pheno.csv', 
+            'val':'./datasets/siam/adhd200_pheno.csv'}
     
-    for mode in ['train', 'val']:
+    for mode in ['val']:
         if mode == 'train':
             test = pair_csv(data[mode], pheno[mode])
             test.form()
