@@ -42,6 +42,17 @@ def parse_opts(env):
         type=int,
         help='data dimension')
 
+    # CUDA
+    # parser.add_argument(
+    #     '--no_cuda', action='store_true', help='If true, cuda is not used.')
+    # parser.set_defaults(no_cuda=False)
+    # parser.add_argument(
+    #     '--gpu_id',
+    #     nargs='+',
+    #     type=int,              
+    #     help='Gpu id lists')
+
+
     # train hyperparameters
     parser.add_argument("--batch_size",
         default=32,
@@ -59,7 +70,7 @@ def parse_opts(env):
         help='learning rate')
 
     # img info
-    [D, H, W, time]
+    # [D, H, W, time]
     parser.add_argument('--input_D',
         default=49,
         type=int,
@@ -81,12 +92,12 @@ def parse_opts(env):
         help='sample_input_time')
 
     # data path
-    parser.add_argument('--train_data_root',
+    parser.add_argument('--train_data_dir',
         default='./datasets/siam/train_%s'%(env),
         type=str,
         help='Root directory path of train data')
 
-    parser.add_argument('--val_data_root',
+    parser.add_argument('--val_data_dir',
         default='./datasets/siam/train_%s'%(env),
         type=str,
         help='Root directory path of val data')

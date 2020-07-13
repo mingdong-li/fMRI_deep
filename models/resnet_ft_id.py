@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import math
 from functools import partial
-from resnet_ft import ResNet
+# from resnet_ft import ResNet
 
 # MedicalNet-Tencent 
 # https://github.com/Tencent/MedicalNet/blob/master/models/resnet.py

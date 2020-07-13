@@ -1,3 +1,5 @@
+import os, sys 
+
 import torch
 import torch.nn as nn
 from torch import optim
@@ -20,7 +22,7 @@ import copy
 
 from utils.niiDataset_bold import CreateNiiDataset, ValNiiDataset
 from utils.contrastive_loss import ContrastiveLoss
-from utils import show_plot
+from utils.utils import show_plot
 from setting import parse_opts
 from model import generate_model
 
@@ -28,19 +30,25 @@ from model import generate_model
 # label:       0: TD        1: ADHD
 # Conv3d的规定输入数据格式为(batch, channel, Depth, Height, Width)
 
+
+
+
 def train(args):
     """train the SiameseNet for ADHD detection
     
     Arguments:
         args {parser.parse_args()} -- for cmd run, add some arguments
     """
+
+    USE_CUDA = torch.cuda.is_available()
+    device = torch.device("cuda:0" if USE_CUDA else "cpu")
     
     fmri_datasets = {}
-    fmri_datasets['train'] = CreateNiiDataset(args.train_dir, args.train_pheno_dir, args.train_csv_dir)
+    fmri_datasets['train'] = CreateNiiDataset(args.train_data_dir, args.train_pheno, args.train_list)
 
     # val*1_vs_train*2
-    fmri_datasets['val'] =  ValNiiDataset(args.train_dir, args.train_pheno_dir,
-                            args.val_dir, args.val_pheno_dir, args.val_train_dir)
+    fmri_datasets['val'] =  ValNiiDataset(args.train_data_dir, args.train_pheno,
+                            args.val_data_dir, args.val_pheno, args.val_list)
 
     dataloaders = {x: torch.utils.data.DataLoader(fmri_datasets[x], batch_size=args.batch_size,
                 shuffle=True, num_workers=0) # more workers may work faster
@@ -60,7 +68,7 @@ def train(args):
     counter = []
     nll_loss_history = {'train':[], 'val':[]}
     con_loss_history = {'train':[], 'val':[]}
-
+    loss_history = {'train':[], 'val':[]}
     acc_history = {'train':[], 'val':[]}
 
     best_acc = 0.0
@@ -88,34 +96,37 @@ def train(args):
             for i, data in enumerate(dataloaders[phase]):
                 assert args.dimension in [3,4]
                 if args.dimension == 3:
-                    img0 = torch.sum(data['input0']['values'], 5)/args.time
-                    img1 = torch.sum(data['input1']['values'], 5)/args.time
+                    img0 = torch.sum(data['input0']['values'], 5)/args.input_time
+                    img1 = torch.sum(data['input1']['values'], 5)/args.input_time
 
                 elif args.dimension == 4:
                     img0 = data['input0']['values']
                     img1 = data['input1']['values']
                 
-                img0_label = data['input0']['labels']
-                img1_label = data['input1']['labels']
                 same_label = data['same']
+                img0, img1 = img0.to(device), img1.to(device)
+                same_label = same_label.view((-1,))
+                same_label = same_label.to(device)
 
-                img0, img1 , same_label = img0.cuda(), img1.cuda() , same_label.cuda()
-                # img0_label = img0_label.cuda()
-                # img1_label = img1_label.cuda()
-
+                # img0_label = data['input0']['labels']
+                # img1_label = data['input1']['labels']
+                # img0_label, img1_label = img0_label.to(device), img1_label.to(device)
+                
+                # zero the parameter gradients
                 optimizer.zero_grad()
+                
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase=='train'):
                     out_f0,out_f1, out_same = model(img0,img1)
-                    _, preds = torch.max(out_same.data, 1)
+                    _, preds = torch.max(out_same, 1)
 
                     loss_con = criterion_con(out_f0,out_f1,same_label)
-                    loss_nll = criterion_nll(preds, same_label)
+                    loss_nll = criterion_nll(out_same, same_label.long())
                     alpha = 1 # shrink parameter to balance loss
                     loss = alpha * loss_con + loss_nll
 
-                    print("Epoch number {}, batch_num {}\n Current loss {}\n".format
+                    print("Epoch number {}, batch_num {}\nCurrent loss {}\n".format
                         (epoch, i, loss.item()))
                 
                     if phase=='train':
@@ -125,7 +136,7 @@ def train(args):
                 running_conloss += loss_con.item()
                 running_nllloss += loss_nll.item()
                 running_loss += loss.item()
-                running_correct += torch.sum(preds==same_label)
+                running_correct += torch.sum(preds==same_label.long())
 
 
 
@@ -166,6 +177,9 @@ def train(args):
 
 
 if __name__ == '__main__':
+    import warnings
+    warnings.filterwarnings('ignore')
+
     # myconfig = Config('bold')
     args = parse_opts('bold')
     train(args)
