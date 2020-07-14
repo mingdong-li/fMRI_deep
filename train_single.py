@@ -46,9 +46,11 @@ def train(args):
     fmri_datasets['train'] = CreateDataset(args.train_data_dir, args.train_pheno)
     fmri_datasets['val'] =  CreateDataset(args.val_data_dir, args.val_pheno)
 
-    dataloaders = {x: torch.utils.data.DataLoader(fmri_datasets[x], batch_size=args.batch_size,
-                shuffle=True, num_workers=0, drop_last= True) # more workers may work faster
-                for x in ['train','val']}
+    train_loader = torch.utils.data.DataLoader(fmri_datasets['train'], batch_size=args.batch_size,
+                shuffle=True, num_workers=0, drop_last= True)
+    val_loader = torch.utils.data.DataLoader(fmri_datasets['val'], batch_size=args.batch_size,
+                shuffle=True, num_workers=0, drop_last= False)
+    dataloaders = {'train': train_loader, 'val': val_loader}
     
     args.model = "resnet_ft"
     args.use_siam = False
@@ -112,8 +114,8 @@ def train(args):
                     _, preds = torch.max(output, 1)
                     loss = criterion_nll(output, img0_label)
 
-                    print("Epoch number {}, batch_num {}\nCurrent loss {}\n".format
-                        (epoch, i, loss.item()))
+                    print("{}: Epoch number {}, batch_num {}\nCurrent loss {}\n".format
+                        (phase, epoch, i, loss.item()))
                 
                     if phase=='train':
                         loss.backward()
