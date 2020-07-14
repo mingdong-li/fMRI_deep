@@ -17,8 +17,8 @@ class Config():
         self.train_dir ='./datasets/siam/train_%s'%(self.env)
         self.val_dir = './datasets/siam/val_%s'%(self.env)
 
-        self.train_pheno_dir ='./datasets/siam/adhd200_pheno.csv'
-        self.val_pheno_dir ='./datasets/siam/adhd200_pheno.csv'
+        self.train_pheno ='./datasets/siam/adhd200_pheno.csv'
+        self.val_pheno ='./datasets/siam/adhd200_pheno.csv'
 
         self.train_csv = './datasets/siam/train_bold.csv'
         self.val_csv = './datasets/siam/val_bold.csv'
@@ -35,6 +35,11 @@ def parse_opts(env):
     parser.add_argument("--model",
         default='baseline',
         type=str,
+        help='backbone select')
+
+    parser.add_argument("--use_siam",
+        default=False,
+        type=bool,
         help='backbone select')
 
     parser.add_argument('--dimension',

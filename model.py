@@ -1,7 +1,9 @@
 import torch
 from torch import nn
 from models import resnet, baseline
-# from models import resnet_ft, resnet_ft_id
+# from models import resnet_ft
+
+from models.models_s import resnet_ft as resnet_ft_s
 
 
 USE_CUDA = torch.cuda.is_available()
@@ -29,32 +31,42 @@ def generate_model(opt):
         elif torch.cuda.device_count()==1:
             model = model.cuda()
 
-    if opt.model == 'resnet':
-        # assert opt.model_depth in [10, 18, 34, 50, 101]
-        model, _ = resnet.initialize_model('resnet18',512)
-        if torch.cuda.device_count()>1:
-            model = nn.DataParallel(model,device_ids=[0,1])
-        elif torch.cuda.device_count()==1:
-            model = model.cuda()
+    # if opt.model == 'resnet':
+    #     assert opt.model_depth in [10, 18, 34, 50, 101]
+    #     if not opt.use_siam:
+    #         model, _ = resnet_s.initialize_model('resnet18',512)
+    #         if torch.cuda.device_count()>1:
+    #             model = nn.DataParallel(model,device_ids=[0,1])
+    #         elif torch.cuda.device_count()==1:
+    #             model = model.cuda()
 
-    # if opt.model == 'resnet_ft':
-    #     model = resnet_ft.resnet18(
-    #                 sample_input_D = 49,
-    #                 sample_input_H = 59,
-    #                 sample_input_W = 47,
-    #                 shortcut_type= 'B',
-    #                 no_cuda= False,
-    #                 num_seg_classes=2,  # 源代码default=2
-    #                 num_features=128)
+    #     else:
+    #         model, _ = resnet.initialize_model('resnet18',512)
+    #         if torch.cuda.device_count()>1:
+    #             model = nn.DataParallel(model,device_ids=[0,1])
+    #         elif torch.cuda.device_count()==1:
+    #             model = model.cuda()
 
-    #     model = nn.DataParallel(model)  # MedicalNet的模型在多GPU训练，dict的key多了module
-    #     pretrained_dict = torch.load('./weight/MedicalNet/pretrain/resnet_18.pth')['state_dict']
-    #     model_dict = model.state_dict()
-    #     # 1. filter out unnecessary keys
-    #     pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-    #     # 2. overwrite entries in the existing state dict
-    #     model_dict.update(pretrained_dict)
-    #     model.load_state_dict(model_dict)
+
+    if opt.model == 'resnet_ft':
+        if not opt.use_siam:
+            model = resnet_ft_s.resnet18(
+                        sample_input_D = 49,
+                        sample_input_H = 59,
+                        sample_input_W = 47,
+                        shortcut_type= 'B',
+                        no_cuda= False,
+                        num_seg_classes=2,
+                        num_features=128)
+
+            model = nn.DataParallel(model)  # MedicalNet的模型在多GPU训练，dict的key多了module
+            pretrained_dict = torch.load('./weight/MedicalNet/pretrain/resnet_18.pth')['state_dict']
+            model_dict = model.state_dict()
+            # 1. filter out unnecessary keys
+            pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+            # 2. overwrite entries in the existing state dict
+            model_dict.update(pretrained_dict)
+            model.load_state_dict(model_dict)
 
     # if opt.model == 'resnet_id':
     #     model = resnet_ft_id.resnet18_id(sample_input_D=49,
