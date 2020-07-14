@@ -46,17 +46,11 @@ def train(args):
     fmri_datasets['train'] = CreateDataset(args.train_data_dir, args.train_pheno)
     fmri_datasets['val'] =  CreateDataset(args.val_data_dir, args.val_pheno)
 
-<<<<<<< HEAD
-    dataloaders = {x: torch.utils.data.DataLoader(fmri_datasets[x], batch_size=args.batch_size,
-                shuffle=True, num_workers=0, drop_last= True) # more workers may work faster
-                for x in ['train','val']}
-=======
     train_loader = torch.utils.data.DataLoader(fmri_datasets['train'], batch_size=args.batch_size,
                 shuffle=True, num_workers=0, drop_last= True)
     val_loader = torch.utils.data.DataLoader(fmri_datasets['val'], batch_size=args.batch_size,
                 shuffle=True, num_workers=0, drop_last= False)
     dataloaders = {'train': train_loader, 'val': val_loader}
->>>>>>> 89a79bb5f6412aa9387d7ad9d2db8a28aea8865c
     
     args.model = "resnet_ft"
     args.use_siam = False
