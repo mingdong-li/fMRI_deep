@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import random
 import nilearn as nil
+from sklearn import metrics
 
 import time
 import argparse
@@ -46,7 +47,7 @@ def train(args):
     fmri_datasets['val'] =  CreateDataset(args.val_data_dir, args.val_pheno)
 
     dataloaders = {x: torch.utils.data.DataLoader(fmri_datasets[x], batch_size=args.batch_size,
-                shuffle=True, num_workers=0) # more workers may work faster
+                shuffle=True, num_workers=0, drop_last= True) # more workers may work faster
                 for x in ['train','val']}
     
     args.model = "resnet_ft"
@@ -78,6 +79,7 @@ def train(args):
         print('-' * 10)
         
         for phase in ['train', 'val']:
+            
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
@@ -85,6 +87,8 @@ def train(args):
 
             running_loss = 0.0
             running_correct = 0
+            pred_all = []
+            label_all = []
 
             for i, data in enumerate(dataloaders[phase]):
                 assert args.dimension in [3,4]
@@ -118,6 +122,8 @@ def train(args):
                 running_loss += loss.item()
                 running_correct += torch.sum(preds==img0_label)
 
+                pred_all.extend(preds.cpu().numpy().tolist())
+                label_all.extend(img0_label.cpu().numpy().tolist())
 
             # epoch结束
             if phase == 'train':
@@ -129,10 +135,11 @@ def train(args):
             
             loss_history[phase].append(epoch_loss)
             acc_history[phase].append(epoch_acc)
-            print("------------------------\n {:s} \n Epoch number {}\n Current loss {}\n".format
+            print("------------------------\n {:s} \n Epoch number {}\n loss {}\n".format
                 (phase, epoch, epoch_loss)) 
-            print("------------------------\n {:s} \n Epoch number {}\n Current contrast accuracy {}\n".format
-                (phase, epoch, epoch_acc))
+            print("------------------------\n {:s} \n Epoch number {}\n |accuracy | precision | recall|\n|{} | {} | {}|\n".format
+                (phase, epoch, epoch_acc,metrics.precision_score(pred_all,label_all),metrics.recall_score(pred_all,label_all)))
+
             
             time_elapsed = time.time() - since
             print('{:s} : Epoch {:d} complete in {:.0f}m {:.0f}s'.format(
