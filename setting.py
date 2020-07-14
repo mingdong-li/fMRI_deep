@@ -32,6 +32,11 @@ def parse_opts(env):
     assert env in ['falff', 'reho', 'bold']
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--env",
+        default = env,
+        type = str,
+        help='data env')
+
     parser.add_argument("--model",
         default='baseline',
         type=str,

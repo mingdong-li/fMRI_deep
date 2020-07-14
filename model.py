@@ -58,7 +58,8 @@ def generate_model(opt):
                         no_cuda= False,
                         num_seg_classes=2,
                         num_features=128)
-
+            
+            model.to(device)
             model = nn.DataParallel(model)  # MedicalNet的模型在多GPU训练，dict的key多了module
             pretrained_dict = torch.load('./weight/MedicalNet/pretrain/resnet_18.pth')['state_dict']
             model_dict = model.state_dict()

@@ -123,8 +123,7 @@ def train(args):
             if phase == 'train':
                 exp_lr_scheduler.step()
 
-            epoch_nllloss = running_nllloss/dataset_sizes[phase]
-            epoch_conloss = running_conloss/dataset_sizes[phase]
+
             epoch_loss = running_loss/dataset_sizes[phase]
             epoch_acc = running_correct.double()/dataset_sizes[phase]
             
