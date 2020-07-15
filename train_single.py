@@ -10,6 +10,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader,Dataset
 import torchvision.utils
+from torch.utils.tensorboard import SummaryWriter       
 
 import numpy as np
 import pandas as pd
@@ -38,6 +39,8 @@ def train(args):
     Arguments:
         args {parser.parse_args()} -- for cmd run, add some arguments
     """
+    writer = SummaryWriter("./tensorboard/runs")
+
 
     USE_CUDA = torch.cuda.is_available()
     device = torch.device("cuda:0" if USE_CUDA else "cpu")
@@ -127,22 +130,31 @@ def train(args):
                 pred_all.extend(preds.cpu().numpy().tolist())
                 label_all.extend(img0_label.cpu().numpy().tolist())
 
+
             # epoch结束
             if phase == 'train':
                 exp_lr_scheduler.step()
+                writer.add_scalar("Loss/train", running_loss, epoch)
+                writer.add_scalar("Accuracuy/train", metrics.accuracy_score(pred_all,label_all), epoch)
+                writer.add_scalar("Precision/train", metrics.precision_score(pred_all,label_all), epoch)
+                writer.add_scalar("Recall/train", metrics.recall_score(pred_all,label_all), epoch)
 
+            if phase == 'val':
+                writer.add_scalar("Loss/val", running_loss, epoch)
+                writer.add_scalar("Accuracuy/val", metrics.accuracy_score(pred_all,label_all), epoch)
+                writer.add_scalar("Precision/val", metrics.precision_score(pred_all,label_all), epoch)
+                writer.add_scalar("Recall/val", metrics.recall_score(pred_all,label_all), epoch)
 
             epoch_loss = running_loss/dataset_sizes[phase]
-            epoch_acc = running_correct.double()/dataset_sizes[phase]
-            
+            epoch_acc = metrics.accuracy_score(pred_all,label_all)
             loss_history[phase].append(epoch_loss)
             acc_history[phase].append(epoch_acc)
             
-            print("------------------------\n {:s} \n Epoch number {}\n loss {}\n".format
+            print("------------------------\n {:s} \nEpoch number {}\n loss {}\n".format
                 (phase, epoch, epoch_loss)) 
-            print("------------------------\n {:s} \n Epoch number {}\n |accuracy | precision | recall|\n|{} | {} | {}|\n".format
-                (phase, epoch, metrics.accuracy_score(pred_all,label_all),
-                metrics.precision_score(pred_all,label_all),metrics.recall_score(pred_all,label_all)))
+            print("------------------------\n {:s} \nEpoch number {}\n |accuracy | precision | recall|\n|{} | {} | {}|\n".format
+                (phase, epoch, epoch_acc,
+                metrics.precision_score(pred_all,label_all), metrics.recall_score(pred_all,label_all)))
 
             
             time_elapsed = time.time() - since
@@ -165,7 +177,6 @@ if __name__ == '__main__':
     import warnings
     warnings.filterwarnings('ignore')
 
-    # myconfig = Config('bold')
     args = parse_opts('bold')
     train(args)
 
