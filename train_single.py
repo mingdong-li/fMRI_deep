@@ -137,10 +137,12 @@ def train(args):
             
             loss_history[phase].append(epoch_loss)
             acc_history[phase].append(epoch_acc)
+            
             print("------------------------\n {:s} \n Epoch number {}\n loss {}\n".format
                 (phase, epoch, epoch_loss)) 
             print("------------------------\n {:s} \n Epoch number {}\n |accuracy | precision | recall|\n|{} | {} | {}|\n".format
-                (phase, epoch, epoch_acc,metrics.precision_score(pred_all,label_all),metrics.recall_score(pred_all,label_all)))
+                (phase, epoch, metrics.accuracy_score(pred_all,label_all),
+                metrics.precision_score(pred_all,label_all),metrics.recall_score(pred_all,label_all)))
 
             
             time_elapsed = time.time() - since
@@ -155,8 +157,8 @@ def train(args):
                 torch.save(model.state_dict(), './weight/save_train/best_model.pth')
 
 
-        show_plot(counter,acc_history, args.env, 'ACCURACY')
-        show_plot(counter,loss_history, args.env, 'LOSS')
+    show_plot(counter,acc_history, args.env, 'ACCURACY')
+    show_plot(counter,loss_history, args.env, 'LOSS')
 
 
 if __name__ == '__main__':

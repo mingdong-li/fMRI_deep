@@ -41,7 +41,7 @@ class CreateDataset(Dataset):
     def __getitem__(self, idx):
         # 
         img0_path = os.path.join(self.root_path, self.imgs[idx])
-        img0_id = self.imgs[idx].split('.')[0]
+        img0_id = int(self.imgs[idx].split('.')[0])
         img0_class = self.pheno[self.pheno['ScanDir ID']==img0_id]['DX'].values
 
         img0_class = 0 if img0_class==0 else 1
