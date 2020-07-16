@@ -5,7 +5,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import math
 from functools import partial
-# from resnet_ft import ResNet
 
 # MedicalNet-Tencent 
 # https://github.com/Tencent/MedicalNet/blob/master/models/resnet.py
@@ -115,7 +114,7 @@ class Bottleneck(nn.Module):
         return out
 
 
-class ResNet_id(ResNet):
+class ResNet_id(nn.Module):
     
     def __init__(self,
                  block,
@@ -130,7 +129,7 @@ class ResNet_id(ResNet):
 
         self.inplanes = 64
         self.no_cuda = no_cuda
-        super(ResNet, self).__init__()
+        super(ResNet_id, self).__init__()
         self.conv1 = nn.Conv3d(
             1,
             64,
@@ -152,36 +151,14 @@ class ResNet_id(ResNet):
             block, 512, layers[3], shortcut_type, stride=1, dilation=4)
 
         self.gap = nn.AdaptiveAvgPool3d(1)
-        self.layer_maxpool = nn.AdaptiveMaxPool3d(1)
-        
-        self.fc1 = nn.Sequential(
-            nn.Linear(64 * block.expansion, num_features),
-            nn.Dropout(0.5)
-        )
-        self.cls1 = nn.Sequential(
-            nn.Linear(num_features,2)
-        )
-
-        self.fc2 = nn.Sequential(
-            nn.Linear(128 * block.expansion, num_features),
-            nn.Dropout(0.5)
-        )
-        self.cls2 = nn.Sequential(
-            nn.Linear(num_features,2)
-        )
-           
-        self.fc3 = nn.Sequential(
-            nn.Linear(256 * block.expansion,num_features),
-            nn.Dropout(0.5)
-        )
-        self.cls3 = nn.Sequential(
-            nn.Linear(num_features,2)
-        )
+        # self.layer_maxpool = nn.AdaptiveMaxPool3d(1)
 
         self.fc = nn.Sequential(
-            nn.Linear(512 * block.expansion,num_features),
-            nn.Dropout(0.5)
+            nn.Linear(512 * block.expansion, num_features),
+            nn.BatchNorm1d(num_features),
+            nn.ReLU(inplace=True)
         )
+
         self.cls = nn.Sequential(
             nn.Linear(num_features,2)
         )
@@ -193,6 +170,33 @@ class ResNet_id(ResNet):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
+    def _make_layer(self, block, planes, blocks, shortcut_type, stride=1, dilation=1):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            if shortcut_type == 'A':
+                downsample = partial(
+                    downsample_basic_block,
+                    planes=planes * block.expansion,
+                    stride=stride,
+                    no_cuda=self.no_cuda)
+            else:
+                downsample = nn.Sequential(
+                    nn.Conv3d(
+                        self.inplanes,
+                        planes * block.expansion,
+                        kernel_size=1,
+                        stride=stride,
+                        bias=False), nn.BatchNorm3d(planes * block.expansion))
+
+        layers = []
+        layers.append(block(self.inplanes, planes, stride=stride, dilation=dilation, downsample=downsample))
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes, dilation=dilation))
+
+        return nn.Sequential(*layers)
+
+
 
     def forward_once(self, x):
         x = self.conv1(x)  
@@ -200,42 +204,26 @@ class ResNet_id(ResNet):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        x = self.layer1(x) 
-        x1 = self.layer_maxpool(x)
-        x1 = x1.view(x1.size(0), -1)
-        x1 = self.fc1(x1)
-        
+        x = self.layer1(x)         
         x = self.layer2(x)
-        x2 = self.layer_maxpool(x)
-        x2 = x2.view(x2.size(0), -1)
-        x2 = self.fc2(x2)
-        
         x = self.layer3(x)
-        x3 = self.layer_maxpool(x)
-        x3 = x3.view(x3.size(0), -1)
-        x3 = self.fc3(x3)
-        
         x = self.layer4(x)
-        x4 = self.layer_maxpool(x)
-        x4 = x4.view(x4.size(0), -1)
-        x4 = self.fc(x4)
+        feat = self.gap(x)
+        feat = feat.view(feat.size(0), -1)
+        feat = self.fc(feat)
+        # feat = self.cls(feat)
 
-        return x1,x2,x3,x4
+        # return feature
+        return feat
 
     def forward(self,x0,x1):
-        out01, out02, out03, out04 = self.forward_once(x0)
-        out11, out12, out13, out14 = self.forward_once(x1)
+        out0 = self.forward_once(x0)
+        out1 = self.forward_once(x1)
 
-        y01, y11 = self.cls1(out01), self.cls1(out11)
-        y02, y12 = self.cls2(out02), self.cls2(out12)
-        y03, y13 = self.cls3(out03), self.cls3(out13)
-        y04 = self.cls(out04)
-        y14 = self.cls(out14)
-
-        results = {'id0':[y01,y02,y03,y04], 'id1':[y11,y12,y13,y14],
-                'feature0':[out01, out02, out03, out04],
-                'feature1':[out11, out12, out13, out14]}
-        return results
+        y0 = self.cls(out0)
+        y1 = self.cls(out0)
+        result = {'feat':[out0, out1], 'id':[y0,y1]}
+        return result
 
 
 def resnet18_id(pretrained=False,**kwargs):
@@ -271,26 +259,18 @@ def resnet50_id(pretrained=False,**kwargs):
     return model
 
 if __name__ == '__main__':
-    # model = resnet50_id(sample_input_D=49,
-    #                 sample_input_H = 59,
-    #                 sample_input_W = 47,
-    #                 shortcut_type= 'B',
-    #                 no_cuda= False,
-    #                 num_seg_classes=2,  # 源代码default=2
-    #                 num_features=128,
-    #                 pretrained=True)
-
-    model = resnet18_id(sample_input_D=49,
-                sample_input_H = 59,
-                sample_input_W = 47,
-                shortcut_type= 'B',
-                no_cuda= False,
-                num_seg_classes=2,  # 源代码default=2
-                num_features=128,
-                pretrained=True)
+    model = resnet50_id(sample_input_D=49,
+                    sample_input_H = 59,
+                    sample_input_W = 47,
+                    shortcut_type= 'B',
+                    no_cuda= False,
+                    num_seg_classes=2,  # 源代码default=2
+                    num_features=128,
+                    pretrained=True)
 
     inputs0 = torch.rand(8, 1, 49, 58, 47)
     inputs1 = torch.rand(8, 1, 49, 58, 47)
     output = model(inputs0, inputs1)
-    print(output['id0'][1].shape)  # float32
+    print(output['feat'][0].shape)  # float32
+    print(output['id'][0].shape)  
     print("ok")
