@@ -64,7 +64,7 @@ def train(args):
     criterion_nll = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr = args.lr)
     # # Decay LR by a factor of 0.1 every 20 epochs
-    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)
     
     # train Iterate over data.
     counter = []

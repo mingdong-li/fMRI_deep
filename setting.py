@@ -70,7 +70,7 @@ def parse_opts(env):
         help='batch size')
 
     parser.add_argument('--epoch_num',
-        default=32,
+        default=200,
         type=int,
         help='epoch num')
 

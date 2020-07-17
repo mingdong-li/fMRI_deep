@@ -50,7 +50,7 @@ def generate_model(opt):
 
     if opt.model == 'resnet_ft':
         if not opt.use_siam:
-            model = resnet_ft_s.resnet18(
+            model = resnet_ft_s.resnet50(
                         sample_input_D = 49,
                         sample_input_H = 59,
                         sample_input_W = 47,
@@ -61,7 +61,7 @@ def generate_model(opt):
             
             model.to(device)
             model = nn.DataParallel(model)  # MedicalNet的模型在多GPU训练，dict的key多了module
-            pretrained_dict = torch.load('./weight/MedicalNet/pretrain/resnet_18.pth')['state_dict']
+            pretrained_dict = torch.load('./weight/MedicalNet/pretrain/resnet_50.pth')['state_dict']
             model_dict = model.state_dict()
             # 1. filter out unnecessary keys
             pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
