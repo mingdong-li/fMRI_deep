@@ -71,6 +71,9 @@ def train(args):
 
     loss_history = {'train':[], 'val':[]}
     acc_history = {'train':[], 'val':[]}
+    pre_history = {'train':[], 'val':[]} # precision
+    rec_history = {'train':[], 'val':[]} # recall
+
 
     best_acc = 0.0
     epoch_acc = 0.0
@@ -146,9 +149,16 @@ def train(args):
                 writer.add_scalar("Recall/val", metrics.recall_score(pred_all,label_all), epoch)
 
             epoch_loss = running_loss/dataset_sizes[phase]
-            epoch_acc = metrics.accuracy_score(pred_all,label_all)
+            epoch_acc = metrics.precision_score(pred_all,label_all)
+            epoch_pre = metrics.accuracy_score(pred_all,label_all)
+            epoch_rec = metrics.recall_score(pred_all,label_all)
+
+            # 保存记录
             loss_history[phase].append(epoch_loss)
             acc_history[phase].append(epoch_acc)
+            pre_history[phase].append(epoch_pre)
+            rec_history[phase].append(epoch_rec)
+
             
             print("------------------------\n {:s} \nEpoch number {}\n loss {}\n".format
                 (phase, epoch, epoch_loss)) 
