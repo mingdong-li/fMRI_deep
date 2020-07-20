@@ -21,7 +21,7 @@ import setting
 
 
 class CreateDataset(Dataset):
-    def __init__(self, data_dir, pheno_dir):
+    def __init__(self, data_dir, pheno_dir, dimension=3):
         self.root_path = data_dir # parameter passing
         self.pheno_dir = pheno_dir
 
@@ -34,6 +34,7 @@ class CreateDataset(Dataset):
 
         self.imgs = imgs  # 所有文件的路径
         self.pheno = pd.read_csv(self.pheno_dir, header=0)
+        self.dimension  = dimension
 
         # for i in self.imgs:
         #     print(self.pheno[self.pheno['ScanDir ID']==int(i.split('.')[0])]['DX'].values)
@@ -48,6 +49,7 @@ class CreateDataset(Dataset):
 
         img0 = nil.image.load_img(img0_path)
         data0 = img0.get_fdata()  # np.memmap
+        input_time = data0.shape[-1]
 
         data = {}
         input0 = {}
@@ -62,6 +64,12 @@ class CreateDataset(Dataset):
         input0['labels'] = label_tensor
 
         data['input0'] = input0
+
+        if self.dimension == 3:
+            data['input0']['values'] = torch.sum(data['input0']['values'], -1)/input_time
+
+        elif self.dimension == 4:
+            data['input0']['values'] = data['input0']['values']
 
         return data
 

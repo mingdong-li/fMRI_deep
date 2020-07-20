@@ -46,11 +46,11 @@ def train(args):
     device = torch.device("cuda:0" if USE_CUDA else "cpu")
     
     fmri_datasets = {}
-    fmri_datasets['train'] = CreateDataset(args.train_data_dir, args.train_pheno)
-    fmri_datasets['val'] =  CreateDataset(args.val_data_dir, args.val_pheno)
+    fmri_datasets['train'] = CreateDataset(args.train_data_dir, args.train_pheno, dimension=3)
+    fmri_datasets['val'] =  CreateDataset(args.val_data_dir, args.val_pheno, dimension=3)
 
     train_loader = torch.utils.data.DataLoader(fmri_datasets['train'], batch_size=args.batch_size,
-                shuffle=True, num_workers=0, drop_last= True)
+                shuffle=True, num_workers=0, drop_last= False)
     val_loader = torch.utils.data.DataLoader(fmri_datasets['val'], batch_size=args.batch_size,
                 shuffle=True, num_workers=0, drop_last= False)
     dataloaders = {'train': train_loader, 'val': val_loader}
@@ -98,14 +98,11 @@ def train(args):
             pred_all = []
             label_all = []
 
+            # 不同机构测量的时间不一样
             for i, data in enumerate(dataloaders[phase]):
                 assert args.dimension in [3,4]
-                if args.dimension == 3:
-                    img0 = torch.sum(data['input0']['values'], 5)/args.input_time
 
-                elif args.dimension == 4:
-                    img0 = data['input0']['values']
-                
+                img0 = data['input0']['values']
                 img0_label = data['input0']['labels']
                 img0= img0.to(device)
                 img0_label = img0_label.to(device)
@@ -172,7 +169,8 @@ def train(args):
                 phase, epoch,time_elapsed // 60, time_elapsed % 60))
 
             # save every epoch
-            torch.save(model.state_dict(), './weight/save_train/epoch%s_%s.pth'%(epoch, args.env))
+            if epoch%20 ==0:
+                torch.save(model.state_dict(), './weight/save_train/epoch%s_%s.pth'%(epoch, args.env))
             # save best model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
